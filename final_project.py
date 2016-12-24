@@ -10,7 +10,7 @@ def get_stat_api(): pass
 metrics = {
     'productType': {
         'method': getProductType,
-        'name': 'productType',
+        'name': 'productType',      # данное поле нужно использовать для названия вложенного поля
     },
     'productColor': {
         'method': getProductColor,
@@ -101,7 +101,7 @@ def getStatistics(strStats, values, globalFilter, limit=None, offset=None):
 
         # если текущая метрика - обычная, например 'productType'
         else:
-            nameMetric = curStat
+            nameMetric = metrics[curStat]['name']
             statIndex += 1          # чтобы соответствовало первой ветке if
             list_of_queries = [{
                 'method': metrics[nameMetric]['method'],
@@ -120,6 +120,7 @@ def getStatistics(strStats, values, globalFilter, limit=None, offset=None):
                 continue
 
             result = getRecursive(lvl + 1, listStatFilter + [item['segment']], statIndex)
+            # вот здесь result[0] как раз равно metrics[metricName]['name']
             item[result[0]] = result[1]
 
     # преобразовываем строку с необходимыми статистиками в список

@@ -1,3 +1,4 @@
+# эти строки введены для IDE, их нужно закомментировать или удалить
 def getProductType(): pass
 def getProductColor(): pass
 def getProductCondition(): pass

@@ -134,8 +134,6 @@ def getStatistics(strStats, values, globalFilter, limit=None, offset=None):
     # преобразовываем строку с необходимыми статистиками в список
     listStats = strStats.replace(' ', '').split(';')
 
-    x = 1
-
     return {
         'stats': getRecursive()[1],
     }

@@ -52,7 +52,7 @@ def getStatistics(strStats, values, globalFilter, limit=None, offset=None):
 
         listStats и listValues берутся из внешней функции
         """
-        # условие выхода из рекурсии - мы вышли за край списка статистик
+        # условие выхода из рекурсии - необходимо для случая, когда listStats изначально пустой
         if statIndex == len(listStats):
             return None
 
@@ -113,6 +113,10 @@ def getStatistics(strStats, values, globalFilter, limit=None, offset=None):
             }]
             data = get_stat_api(list_of_queries)[0]
 
+        # условие выхода из рекурсии - достигнут конец списка listStats
+        if (statIndex + 1) == len(listStats):
+            return [nameMetric, data]
+
         # здесь у нас есть список статистик в data и соответствующее им название метрики
         for item in data:
 
@@ -120,17 +124,12 @@ def getStatistics(strStats, values, globalFilter, limit=None, offset=None):
             if not 'segment' in item:
                 continue
 
-            result = getRecursive(lvl + 1, listStatFilter + [item['segment']], statIndex)
-
-            # None означает, что достигнут конец рекурсии, для всех остальных item будет возвращаться тоже
-            # None, поэтому просто выходим из цикла
-            if result is None:
-                break
+            result = getRecursive(lvl + 1, listStatFilter + [item['segment']], statIndex + 1)
 
             # вот здесь result[0] как раз равно metrics[metricName]['name']
             item[result[0]] = result[1]
 
-        return data
+        return [nameMetric, data]
 
     # преобразовываем строку с необходимыми статистиками в список
     listStats = strStats.replace(' ', '').split(';')

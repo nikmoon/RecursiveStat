@@ -74,6 +74,7 @@ def getStatistics(strStats, values, globalFilter, limit=None, offset=None):
             while statIndex < (len(listStats) - 1):
                 statIndex += 1
                 if not listStats[statIndex].startswith('branch'):
+                    statIndex -= 1
                     break
                 listBranches.append(listStats[statIndex])
 
@@ -93,7 +94,8 @@ def getStatistics(strStats, values, globalFilter, limit=None, offset=None):
                 })
 
             # запрашиваем статистики для указанных веток
-            data = get_stat_api(list_of_queries)
+            # для каждого запроса из списка должен возвращаться один словарь
+            data = [item[0] for item in get_stat_api(list_of_queries)]
 
             # если в списке нужных метрик больше нет, возвращаем результат наверх
             if statIndex == (len(listStats) - 1):
@@ -102,7 +104,6 @@ def getStatistics(strStats, values, globalFilter, limit=None, offset=None):
         # если текущая метрика - обычная, например 'productType'
         else:
             nameMetric = metrics[curStat]['name']
-            statIndex += 1          # чтобы соответствовало первой ветке if
             list_of_queries = [{
                 'method': metrics[nameMetric]['method'],
                 'values': values,
@@ -110,7 +111,7 @@ def getStatistics(strStats, values, globalFilter, limit=None, offset=None):
                 'limit': limit if lvl == 0 else None,
                 'offset': offset if lvl == 0 else None,
             }]
-            data = get_stat_api(list_of_queries)
+            data = get_stat_api(list_of_queries)[0]
 
         # здесь у нас есть список статистик в data и соответствующее им название метрики
         for item in data:
@@ -120,8 +121,16 @@ def getStatistics(strStats, values, globalFilter, limit=None, offset=None):
                 continue
 
             result = getRecursive(lvl + 1, listStatFilter + [item['segment']], statIndex)
+
+            # None означает, что достигнут конец рекурсии, для всех остальных item будет возвращаться тоже
+            # None, поэтому просто выходим из цикла
+            if result is None:
+                break
+
             # вот здесь result[0] как раз равно metrics[metricName]['name']
             item[result[0]] = result[1]
+
+        return data
 
     # преобразовываем строку с необходимыми статистиками в список
     listStats = strStats.replace(' ', '').split(';')

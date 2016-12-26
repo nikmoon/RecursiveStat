@@ -2,7 +2,7 @@
 def getProductType(): pass
 def getProductColor(): pass
 def getProductCondition(): pass
-def get_stat_api(): pass
+def get_stat_api(list_of_queries): pass
 
 """
 Список метрик и соответствующих им методов
@@ -82,20 +82,17 @@ def getStatistics(strStats, values, globalFilter, limit=None, offset=None):
 
             # здесь мы имеем список с названиями бранчей, можно получить статистику для них
             # используя пакетную обработку
-            list_of_queries = []
+            data = []
             for branch in listBranches:
-                list_of_queries.append({
+                query = {
                     'method': 'branch',     # значение указыает на то, что это запрос для бранча
                     'branch': branch,
                     'values': values,
                     'filter': filter,
                     'limit': None,          # limit и offset тоже не имеют смысла в данной ветке
                     'offset': None,
-                })
-
-            # запрашиваем статистики для указанных веток
-            # для каждого запроса из списка должен возвращаться один словарь
-            data = [item[0] for item in get_stat_api(list_of_queries)]
+                }
+                data.append(get_stat_api([query])[0])
 
             # если в списке нужных метрик больше нет, возвращаем результат наверх
             if statIndex == (len(listStats) - 1):

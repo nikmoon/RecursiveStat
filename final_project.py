@@ -92,7 +92,7 @@ def getStatistics(strStats, values, globalFilter, limit=None, offset=None):
                     'limit': None,          # limit и offset тоже не имеют смысла в данной ветке
                     'offset': None,
                 }
-                data.append(get_stat_api([query])[0])
+                data.append(get_stat_api([query])[0][0])
 
             # если в списке нужных метрик больше нет, возвращаем результат наверх
             if statIndex == (len(listStats) - 1):

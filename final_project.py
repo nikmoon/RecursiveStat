@@ -81,7 +81,6 @@ def getStatistics(strStats, values, globalFilter, limit=None, offset=None):
             listBranches.append('All data')     # для ветки 'All data'
 
             # здесь мы имеем список с названиями бранчей, можно получить статистику для них
-            # используя пакетную обработку
             data = []
             for branch in listBranches:
                 query = {

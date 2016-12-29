@@ -62,13 +62,10 @@ def getStatistics(strStats, values, globalFilter, limit=None, offset=None):
         # берем очередную метрику, для которой нужна статистика
         curStat = listStats[statIndex]
 
-        listBranches = []
-        nameMetric = None
-
         # если текущая метрика - branch
         if curStat.startswith('branch'):
             nameMetric = 'branch'
-            listBranches.append(curStat)
+            listBranches = [curStat]
 
             # выбираем все идущие подряд бранчи
             while statIndex < (len(listStats) - 1):
@@ -93,10 +90,6 @@ def getStatistics(strStats, values, globalFilter, limit=None, offset=None):
                 }
                 data.append(get_stat_api([query])[0][0])
 
-            # если в списке нужных метрик больше нет, возвращаем результат наверх
-            if statIndex == (len(listStats) - 1):
-                return [nameMetric, data]
-
         # если текущая метрика - обычная, например 'productType'
         else:
             nameMetric = metrics[curStat]['name']
@@ -113,11 +106,15 @@ def getStatistics(strStats, values, globalFilter, limit=None, offset=None):
         if (statIndex + 1) == len(listStats):
             return [nameMetric, data]
 
+        # если у нас есть вложенные бранчи, то здесь самое место для их обработки
+        if listStats[statIndex + 1] == 'subbranch':
+            statIndex += 1      # просто пропускаем данный элемент списка
+
         # здесь у нас есть список статистик в data и соответствующее им название метрики
         for item in data:
 
             # если текущий элемент не имеет поля 'segment', для него рекурсия закончена - он последний в цепочке
-            if not 'segment' in item:
+            if 'segment' not in item:
                 continue
 
             result = getRecursive(lvl + 1, listStatFilter + [item['segment']], statIndex + 1)
@@ -127,8 +124,14 @@ def getStatistics(strStats, values, globalFilter, limit=None, offset=None):
 
         return [nameMetric, data]
 
-    # преобразовываем строку с необходимыми статистиками в список
-    listStats = strStats.replace(' ', '').split(';')
+    # для корректной обработки вложенных бранчей типа branch1,branch2|branch3
+    # заменим разделяющий знак дополнительной "виртуальной" метрикой, чтобы получился примерно
+    # такой список ['branch1', 'branch2', 'subbranch', "branch3"]
+    strStats = strStats.replace('|', ',subbranch,')
+
+    # преобразовываем строку с необходимыми статистиками в список,
+    # сначала удалив все пробелы из строки
+    listStats = strStats.replace(' ', '').split(',')
 
     return {
         'stats': getRecursive()[1],
